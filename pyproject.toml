@@ -8,4 +8,5 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "livekit-agents[silero,turn-detector]~=1.4",
     "livekit-plugins-noise-cancellation~=0.2",
+    "pymongo>=4.16.0",
 ]
