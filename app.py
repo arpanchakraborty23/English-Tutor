@@ -1,11 +1,13 @@
+import os
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from livekit import api
 
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = BASE_DIR / "templates"
@@ -37,16 +39,23 @@ async def home():
 
 @app.post("/api/conversation/start")
 async def start_conversation(payload: ConversationStartRequest):
-    print("Received conversation setup:")
-    print(f"Language: {payload.language}")
-    print(f"Reason: {payload.reason}")
-    print(f"Reason Type: {payload.reason_type}")
-    print(f"Level: {payload.level}")
-    print(f"Conversation Examples: {payload.conversation_examples}")
+    api_key = os.getenv('LIVEKIT_API_KEY')
+    api_secret = os.getenv('LIVEKIT_API_SECRET')
+    server_url = os.getenv('LIVEKIT_URL')
+
+    if not all([api_key,api_secret,server_url]):
+        return HTTPException(
+            status_code=500,
+            detail="LiveKit API credentials are not set in environment variables."
+        )
+    
+    token = api.AccessToken(api_key, api_secret) 
+    token.with_grants(api.VideoGrants(room_join=True))
+    token.with_metadata(payload.model_dump_json())
+    token = token.to_jwt()
     return {
-        "ok": True,
-        "message": "Conversation setup received.",
-        "data": payload.model_dump(),
+        "token": token
+
     }
 
 

@@ -224,6 +224,27 @@
       border: 1px solid #fecaca;
     }
 
+    .result-box {
+      margin: 0 24px 18px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #f8fbff;
+      padding: 10px 12px;
+      display: none;
+    }
+
+    .result-box.show {
+      display: block;
+    }
+
+    .result-box pre {
+      margin-top: 8px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.85rem;
+      color: #1f2937;
+    }
+
     @media (max-width: 640px) {
       .steps {
         grid-template-columns: repeat(2, 1fr);
@@ -313,6 +334,7 @@
       </div>
 
       <div id="status" class="status"></div>
+      <div id="resultBox" class="result-box"></div>
     </form>
   </div>
 
@@ -327,6 +349,7 @@
     const reasonOptions = document.getElementById('reasonOptions');
     const otherReasonField = document.getElementById('otherReasonField');
     const summaryBox = document.getElementById('summaryBox');
+    const resultBox = document.getElementById('resultBox');
 
     let currentStep = 0;
 
@@ -423,6 +446,19 @@
       statusBox.className = 'status';
     }
 
+    function showResult(data) {
+      const directToken = data && typeof data === 'object' ? data.token : null;
+      const nestedToken = data && data.data && typeof data.data === 'object' ? data.data.token : null;
+      const token = directToken || nestedToken;
+      const tokenLine = token ? `<strong>Token:</strong> ${token}` : '<strong>Token:</strong> Not found in response';
+
+      resultBox.innerHTML = `
+        ${tokenLine}
+        <pre>${JSON.stringify(data, null, 2)}</pre>
+      `;
+      resultBox.className = 'result-box show';
+    }
+
     reasonOptions.addEventListener('change', () => {
       const reason = getSelectedRadio('reason');
       otherReasonField.style.display = reason === 'other' ? 'block' : 'none';
@@ -462,6 +498,8 @@
       submitBtn.disabled = true;
       submitBtn.textContent = 'Starting...';
       clearStatus();
+      resultBox.className = 'result-box';
+      resultBox.innerHTML = '';
 
       try {
         const response = await fetch(endpoint, {
@@ -473,11 +511,19 @@
         });
 
         const responseText = await response.text();
+        let responseData = null;
+        try {
+          responseData = responseText ? JSON.parse(responseText) : {};
+        } catch (parseError) {
+          responseData = { raw_response: responseText };
+        }
+
         if (!response.ok) {
           throw new Error(responseText || `Request failed with status ${response.status}`);
         }
 
-        showStatus('Conversation setup submitted successfully.', 'success');
+        showStatus('Conversation setup submitted successfully. Token/response shown below.', 'success');
+        showResult(responseData);
       } catch (error) {
         showStatus(`Submit failed: ${error.message}`, 'error');
       } finally {
