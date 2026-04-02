@@ -245,6 +245,32 @@
       color: #1f2937;
     }
 
+    .voice-box {
+      margin: 0 24px 22px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #f8fffc;
+      padding: 12px;
+      display: none;
+    }
+
+    .voice-box.show {
+      display: block;
+    }
+
+    .voice-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 10px 0 6px;
+    }
+
+    .voice-note {
+      color: #374151;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
     @media (max-width: 640px) {
       .steps {
         grid-template-columns: repeat(2, 1fr);
@@ -335,9 +361,19 @@
 
       <div id="status" class="status"></div>
       <div id="resultBox" class="result-box"></div>
+      <div id="voiceBox" class="voice-box">
+        <strong>Voice Agent</strong>
+        <div class="voice-controls">
+          <button type="button" class="btn-primary" id="connectVoiceBtn">Connect Voice</button>
+          <button type="button" class="btn-secondary" id="muteBtn" disabled>Mute Mic</button>
+          <button type="button" class="btn-secondary" id="disconnectVoiceBtn" disabled>Disconnect</button>
+        </div>
+        <div class="voice-note" id="voiceStatus">Submit setup first to enable voice connection.</div>
+      </div>
     </form>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
   <script>
     const panels = Array.from(document.querySelectorAll('.panel'));
     const stepPills = Array.from(document.querySelectorAll('.step-pill'));
@@ -350,8 +386,16 @@
     const otherReasonField = document.getElementById('otherReasonField');
     const summaryBox = document.getElementById('summaryBox');
     const resultBox = document.getElementById('resultBox');
+    const voiceBox = document.getElementById('voiceBox');
+    const voiceStatus = document.getElementById('voiceStatus');
+    const connectVoiceBtn = document.getElementById('connectVoiceBtn');
+    const disconnectVoiceBtn = document.getElementById('disconnectVoiceBtn');
+    const muteBtn = document.getElementById('muteBtn');
 
     let currentStep = 0;
+    let connectionInfo = null;
+    let lkRoom = null;
+    let micEnabled = true;
 
     function updateStepUI() {
       panels.forEach((panel, index) => {
@@ -459,6 +503,104 @@
       resultBox.className = 'result-box show';
     }
 
+    function extractConnectionInfo(data) {
+      if (!data || typeof data !== 'object') {
+        return null;
+      }
+
+      const token = data.token || (data.data && data.data.token);
+      const livekitUrl = data.livekit_url || data.livekitUrl || (data.data && (data.data.livekit_url || data.data.livekitUrl));
+      const roomName = data.room_name || data.roomName || (data.data && (data.data.room_name || data.data.roomName));
+      const identity = data.identity || (data.data && data.data.identity);
+
+      if (!token || !livekitUrl) {
+        return null;
+      }
+
+      return { token, livekitUrl, roomName: roomName || '', identity: identity || '' };
+    }
+
+    function showVoicePanel(info) {
+      voiceBox.className = 'voice-box show';
+      if (!info) {
+        voiceStatus.textContent = 'Token found, but LiveKit URL is missing in response.';
+        connectVoiceBtn.disabled = true;
+        return;
+      }
+      voiceStatus.textContent = `Ready to connect. Room: ${info.roomName || 'unknown'} | Identity: ${info.identity || 'unknown'}`;
+      connectVoiceBtn.disabled = false;
+    }
+
+    function setVoiceConnectedState(isConnected) {
+      connectVoiceBtn.disabled = isConnected || !connectionInfo;
+      disconnectVoiceBtn.disabled = !isConnected;
+      muteBtn.disabled = !isConnected;
+    }
+
+    function attachRemoteAudio(track) {
+      const el = track.attach();
+      el.autoplay = true;
+      el.controls = false;
+      document.body.appendChild(el);
+    }
+
+    async function connectVoice() {
+      if (!window.LivekitClient) {
+        voiceStatus.textContent = 'LiveKit client library not loaded.';
+        return;
+      }
+      if (!connectionInfo) {
+        voiceStatus.textContent = 'No token/livekit URL. Submit setup first.';
+        return;
+      }
+
+      try {
+        voiceStatus.textContent = 'Connecting to LiveKit room...';
+        lkRoom = new LivekitClient.Room();
+
+        lkRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
+          if (track.kind === LivekitClient.Track.Kind.Audio) {
+            attachRemoteAudio(track);
+          }
+        });
+
+        lkRoom.on(LivekitClient.RoomEvent.Disconnected, () => {
+          setVoiceConnectedState(false);
+          voiceStatus.textContent = 'Disconnected from voice room.';
+          lkRoom = null;
+        });
+
+        await lkRoom.connect(connectionInfo.livekitUrl, connectionInfo.token);
+        await lkRoom.localParticipant.setMicrophoneEnabled(true);
+        micEnabled = true;
+        muteBtn.textContent = 'Mute Mic';
+        setVoiceConnectedState(true);
+        voiceStatus.textContent = 'Connected. Mic is ON. Start speaking.';
+      } catch (error) {
+        voiceStatus.textContent = `Voice connect failed: ${error.message}`;
+        setVoiceConnectedState(false);
+      }
+    }
+
+    async function disconnectVoice() {
+      if (lkRoom) {
+        await lkRoom.disconnect();
+        lkRoom = null;
+      }
+      setVoiceConnectedState(false);
+      voiceStatus.textContent = 'Disconnected from voice room.';
+    }
+
+    async function toggleMute() {
+      if (!lkRoom) {
+        return;
+      }
+      micEnabled = !micEnabled;
+      await lkRoom.localParticipant.setMicrophoneEnabled(micEnabled);
+      muteBtn.textContent = micEnabled ? 'Mute Mic' : 'Unmute Mic';
+      voiceStatus.textContent = micEnabled ? 'Connected. Mic is ON.' : 'Connected. Mic is OFF.';
+    }
+
     reasonOptions.addEventListener('change', () => {
       const reason = getSelectedRadio('reason');
       otherReasonField.style.display = reason === 'other' ? 'block' : 'none';
@@ -524,6 +666,9 @@
 
         showStatus('Conversation setup submitted successfully. Token/response shown below.', 'success');
         showResult(responseData);
+        connectionInfo = extractConnectionInfo(responseData);
+        showVoicePanel(connectionInfo);
+        setVoiceConnectedState(false);
       } catch (error) {
         showStatus(`Submit failed: ${error.message}`, 'error');
       } finally {
@@ -531,6 +676,10 @@
         submitBtn.textContent = 'Start Conversation';
       }
     });
+
+    connectVoiceBtn.addEventListener('click', connectVoice);
+    disconnectVoiceBtn.addEventListener('click', disconnectVoice);
+    muteBtn.addEventListener('click', toggleMute);
 
     updateStepUI();
   </script>

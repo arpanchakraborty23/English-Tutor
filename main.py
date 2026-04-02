@@ -12,7 +12,7 @@ from livekit.agents.metrics import EOUMetrics, LLMMetrics, TTSMetrics
 from src.services.session import SessionManager
 from src.voice_agent.agents import Assistant
 from src.prompt.english import english_prompt
-from src.utils import parse_json_metadata
+from src.utils import parse_json_metadata, build_user_profile_text
 from src.services.metrics import ModelMetrics
 
 
@@ -46,29 +46,42 @@ async def my_agent(ctx: agents.JobContext):
         "name": participant.name,
         **participant_metadata,
     }
+    print(f"Participant context: {participant_context}")
 
     # Start the agent session with the specified configurations
+    aws_access_key = os.getenv("AWS_ACCESS_KEY_ID") or os.getenv("AWS_ACCESS_KEY")
+    aws_secret_key = os.getenv("AWS_SECRET_ACCESS_KEY") or os.getenv("AWS_SCERATE_KEY")
+
     req = api.RoomCompositeEgressRequest(
         room_name=ctx.room.name,
         audio_only=True,
         file_outputs=[
             api.EncodedFileOutput(
                 file_type=api.EncodedFileType.MP4,
-                filepath=f"recordings/my-room-test.ogg",
+                filepath="recordings/my-room-test.ogg",
                 s3=api.S3Upload(
                     bucket=os.getenv("AWS_BUCKET_NAME"),
                     region=os.getenv("AWS_REGION"),
-                    access_key=os.getenv("AWS_ACCESS_KEY_ID"),
-                    secret=os.getenv("AWS_SECRET_ACCESS_KEY"),
+                    access_key=aws_access_key,
+                    secret=aws_secret_key,
                 ),
             )
         ],
     )
 
-    lkapi = api.LiveKitAPI()
-    await lkapi.egress.start_room_composite_egress(req)
+    # Do not block the agent session if egress/recording setup fails.
+    try:
+        lkapi = api.LiveKitAPI()
+        await lkapi.egress.start_room_composite_egress(req)
+    except Exception as e:
+        logger.warning(f"Egress start failed, continuing without recording: {e}")
 
-    agent = Assistant()._tutor(language="english",instructions=english_prompt(user_info="name:Arpan,age:30,english_level:beginner"),initial_ctx=None)
+    user_info = build_user_profile_text(participant_context)
+    agent = Assistant()._tutor(
+        language="english",
+        instructions=english_prompt(user_info=user_info),
+        initial_ctx=None,
+    )
 
     session = AgentSession(
         stt="deepgram/nova-3:multi",
