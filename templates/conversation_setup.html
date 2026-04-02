@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conversation Setup</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --border: #dbe3ef;
+      --ok-bg: #ecfdf5;
+      --ok-text: #065f46;
+      --err-bg: #fef2f2;
+      --err-text: #991b1b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(140deg, #e8f4ff, #f5f9ff 45%, #eefcf8);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 760px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 20px 24px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 14px 24px 0;
+    }
+
+    .step-pill {
+      text-align: center;
+      font-size: 0.84rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 10px;
+      color: var(--muted);
+      background: #fafcff;
+    }
+
+    .step-pill.active {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: #effcf9;
+      font-weight: 600;
+    }
+
+    .panel {
+      display: none;
+      padding: 22px 24px;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .panel h2 {
+      margin-bottom: 14px;
+      font-size: 1.08rem;
+    }
+
+    .options {
+      display: grid;
+      gap: 10px;
+    }
+
+    .options label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 12px;
+      cursor: pointer;
+      background: #fff;
+    }
+
+    .options input[type="radio"] {
+      accent-color: var(--primary);
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.92rem;
+      color: #374151;
+      font-weight: 600;
+    }
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 12px;
+      font-size: 0.95rem;
+      outline: none;
+      background: #fff;
+    }
+
+    .field textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
+      border-color: #5dc8bf;
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 24px 22px;
+      gap: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.94rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-secondary {
+      background: #f2f4f8;
+      color: #374151;
+    }
+
+    .btn-secondary:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      margin-left: auto;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .summary-box {
+      background: #f9fafb;
+      border: 1px dashed #d1d5db;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 0.93rem;
+      color: #374151;
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+
+    .status {
+      margin: 0 24px 16px;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .status.success {
+      display: block;
+      background: var(--ok-bg);
+      color: var(--ok-text);
+      border: 1px solid #a7f3d0;
+    }
+
+    .status.error {
+      display: block;
+      background: var(--err-bg);
+      color: var(--err-text);
+      border: 1px solid #fecaca;
+    }
+
+    @media (max-width: 640px) {
+      .steps {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .actions {
+        flex-wrap: wrap;
+      }
+
+      .btn-primary,
+      .btn-secondary {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Start English Tutor Conversation</h1>
+      <p>Choose your preferences before starting the conversation.</p>
+    </div>
+
+    <div class="steps" id="stepPills">
+      <div class="step-pill active">1. Language</div>
+      <div class="step-pill">2. Reason</div>
+      <div class="step-pill">3. Level</div>
+      <div class="step-pill">4. Examples</div>
+    </div>
+
+    <form id="setupForm">
+      <section class="panel active" data-step="0">
+        <h2>Select Preferred Language</h2>
+        <div class="field">
+          <label for="language">Language</label>
+          <select id="language" name="language" required>
+            <option value="">Select language</option>
+            <option value="english">English</option>
+            <option value="hindi">Hindi</option>
+            <option value="spanish">Spanish</option>
+            <option value="french">French</option>
+            <option value="german">German</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="panel" data-step="1">
+        <h2>Why Do You Want to Practice?</h2>
+        <div class="options" id="reasonOptions">
+          <label><input type="radio" name="reason" value="business" required />Business</label>
+          <label><input type="radio" name="reason" value="communication" required />Communication</label>
+          <label><input type="radio" name="reason" value="general" required />General</label>
+          <label><input type="radio" name="reason" value="other" required />Other</label>
+        </div>
+        <div class="field" id="otherReasonField" style="display:none; margin-top: 12px;">
+          <label for="otherReason">Write your reason</label>
+          <input type="text" id="otherReason" name="otherReason" placeholder="Example: Interview preparation" />
+        </div>
+      </section>
+
+      <section class="panel" data-step="2">
+        <h2>Select Your Level</h2>
+        <div class="options">
+          <label><input type="radio" name="level" value="beginner" required />Beginner</label>
+          <label><input type="radio" name="level" value="intermediate" required />Intermediate</label>
+          <label><input type="radio" name="level" value="advanced" required />Advanced</label>
+        </div>
+      </section>
+
+      <section class="panel" data-step="3">
+        <h2>Conversation Examples</h2>
+        <div class="field">
+          <label for="conversationExamples">Give example topics or lines you want to practice</label>
+          <textarea id="conversationExamples" name="conversationExamples" placeholder="Example: Meeting introduction, negotiating deadlines, introducing myself"></textarea>
+        </div>
+        <div class="field">
+          <label for="endpointUrl">Submit Endpoint</label>
+          <input type="text" id="endpointUrl" name="endpointUrl" value="/api/conversation/start" />
+        </div>
+        <div class="summary-box" id="summaryBox">Your selected data will appear here before submit.</div>
+      </section>
+
+      <div class="actions">
+        <button type="button" class="btn-secondary" id="prevBtn" disabled>Previous</button>
+        <button type="button" class="btn-primary" id="nextBtn">Next</button>
+        <button type="submit" class="btn-primary" id="submitBtn" style="display:none;">Start Conversation</button>
+      </div>
+
+      <div id="status" class="status"></div>
+    </form>
+  </div>
+
+  <script>
+    const panels = Array.from(document.querySelectorAll('.panel'));
+    const stepPills = Array.from(document.querySelectorAll('.step-pill'));
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusBox = document.getElementById('status');
+    const setupForm = document.getElementById('setupForm');
+    const reasonOptions = document.getElementById('reasonOptions');
+    const otherReasonField = document.getElementById('otherReasonField');
+    const summaryBox = document.getElementById('summaryBox');
+
+    let currentStep = 0;
+
+    function updateStepUI() {
+      panels.forEach((panel, index) => {
+        panel.classList.toggle('active', index === currentStep);
+      });
+
+      stepPills.forEach((pill, index) => {
+        pill.classList.toggle('active', index === currentStep);
+      });
+
+      prevBtn.disabled = currentStep === 0;
+      const isLastStep = currentStep === panels.length - 1;
+      nextBtn.style.display = isLastStep ? 'none' : 'inline-block';
+      submitBtn.style.display = isLastStep ? 'inline-block' : 'none';
+
+      if (isLastStep) {
+        updateSummary();
+      }
+    }
+
+    function getSelectedRadio(name) {
+      const selected = document.querySelector(`input[name="${name}"]:checked`);
+      return selected ? selected.value : '';
+    }
+
+    function validateStep(step) {
+      if (step === 0) {
+        const language = document.getElementById('language').value;
+        if (!language) {
+          showStatus('Please choose a language.', 'error');
+          return false;
+        }
+      }
+
+      if (step === 1) {
+        const reason = getSelectedRadio('reason');
+        if (!reason) {
+          showStatus('Please select one reason.', 'error');
+          return false;
+        }
+        if (reason === 'other') {
+          const otherReason = document.getElementById('otherReason').value.trim();
+          if (!otherReason) {
+            showStatus('Please write your custom reason.', 'error');
+            return false;
+          }
+        }
+      }
+
+      if (step === 2) {
+        const level = getSelectedRadio('level');
+        if (!level) {
+          showStatus('Please select your level.', 'error');
+          return false;
+        }
+      }
+
+      clearStatus();
+      return true;
+    }
+
+    function buildPayload() {
+      const reason = getSelectedRadio('reason');
+      const otherReason = document.getElementById('otherReason').value.trim();
+
+      return {
+        language: document.getElementById('language').value,
+        reason: reason === 'other' ? otherReason : reason,
+        reason_type: reason,
+        level: getSelectedRadio('level'),
+        conversation_examples: document.getElementById('conversationExamples').value.trim(),
+      };
+    }
+
+    function updateSummary() {
+      const data = buildPayload();
+      summaryBox.innerHTML = `
+        <strong>Language:</strong> ${data.language || '-'}<br>
+        <strong>Reason:</strong> ${data.reason || '-'}<br>
+        <strong>Level:</strong> ${data.level || '-'}<br>
+        <strong>Examples:</strong> ${data.conversation_examples || '-'}
+      `;
+    }
+
+    function showStatus(message, type) {
+      statusBox.textContent = message;
+      statusBox.className = `status ${type}`;
+    }
+
+    function clearStatus() {
+      statusBox.textContent = '';
+      statusBox.className = 'status';
+    }
+
+    reasonOptions.addEventListener('change', () => {
+      const reason = getSelectedRadio('reason');
+      otherReasonField.style.display = reason === 'other' ? 'block' : 'none';
+      if (reason !== 'other') {
+        document.getElementById('otherReason').value = '';
+      }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (!validateStep(currentStep)) {
+        return;
+      }
+      currentStep = Math.min(currentStep + 1, panels.length - 1);
+      updateStepUI();
+    });
+
+    prevBtn.addEventListener('click', () => {
+      clearStatus();
+      currentStep = Math.max(currentStep - 1, 0);
+      updateStepUI();
+    });
+
+    setupForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!validateStep(0) || !validateStep(1) || !validateStep(2)) {
+        return;
+      }
+
+      const endpoint = document.getElementById('endpointUrl').value.trim();
+      if (!endpoint) {
+        showStatus('Please provide endpoint URL.', 'error');
+        return;
+      }
+
+      const payload = buildPayload();
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Starting...';
+      clearStatus();
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const responseText = await response.text();
+        if (!response.ok) {
+          throw new Error(responseText || `Request failed with status ${response.status}`);
+        }
+
+        showStatus('Conversation setup submitted successfully.', 'success');
+      } catch (error) {
+        showStatus(`Submit failed: ${error.message}`, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Start Conversation';
+      }
+    });
+
+    updateStepUI();
+  </script>
+</body>
+</html>
