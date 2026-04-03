@@ -12,7 +12,11 @@ from livekit.agents.metrics import EOUMetrics, LLMMetrics, TTSMetrics
 from src.services.session import SessionManager
 from src.voice_agent.agents import Assistant
 from src.prompt.english import english_prompt
-from src.utils import parse_json_metadata, build_user_profile_text
+from src.utils import (
+    build_user_profile_text,
+    normalize_participant_attributes,
+    parse_json_metadata,
+)
 from src.services.metrics import ModelMetrics
 
 
@@ -41,12 +45,16 @@ async def my_agent(ctx: agents.JobContext):
 
     # Build the runtime context 
     participant_metadata = parse_json_metadata(participant.metadata)
+    participant_attributes = normalize_participant_attributes(
+        getattr(participant, "attributes", None)
+    )
     participant_context = {
         "identity": participant.identity,
         "name": participant.name,
         **participant_metadata,
+        **participant_attributes,
     }
-    print(f"Participant context: {participant_context}")
+    logger.info("Participant context: %s", participant_context)
 
     # Start the agent session with the specified configurations
     aws_access_key = os.getenv("AWS_ACCESS_KEY_ID") or os.getenv("AWS_ACCESS_KEY")

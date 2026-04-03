@@ -163,7 +163,12 @@ pymongo>=4.16.0
    \\\
 
 4. **Configure Environment**
-   Create \.env\ file in project root:
+   Copy `.env.example` to `.env` and fill in the values:
+   \\\ash
+   cp .env.example .env
+   \\\
+
+   Required variables:
    \\\
    # LiveKit Configuration
    LIVEKIT_URL=<your-livekit-url>
@@ -187,10 +192,28 @@ pymongo>=4.16.0
    CARTESIA_API_KEY=<your-cartesia-key>
    \\\
 
-5. **Run Agent**
+5. **Run Token API**
+   \\\ash
+   uvicorn app:app --host 127.0.0.1 --port 8000 --reload
+   \\\
+
+6. **Run Agent Worker**
    \\\ash
    python main.py
    \\\
+
+### Token Endpoint
+
+The frontend voice session now uses the LiveKit-standard token endpoint format documented at:
+- `POST /api/token`
+- request fields: `room_name`, `participant_identity`, `participant_name`, `participant_metadata`, `participant_attributes`, `room_config`
+- response fields: `server_url`, `participant_token`
+
+The FastAPI implementation lives in `app.py`. Learner-specific practice information is attached during token creation through:
+- `participant_metadata`: full JSON payload for the tutor
+- `participant_attributes`: compact key/value fields like `language`, `level`, and `reason`
+
+The older compatibility route `POST /api/conversation/start` is still available, but the frontend now prefers `/api/token`.
 
 ## Project Structure
 

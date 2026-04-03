@@ -17,6 +17,20 @@ def parse_json_metadata(raw_metadata: str | None) -> dict[str, Any]:
         return {"raw_metadata": raw_metadata}
 
 
+def normalize_participant_attributes(raw_attributes: Any) -> dict[str, Any]:
+    if not raw_attributes:
+        return {}
+
+    if isinstance(raw_attributes, dict):
+        return raw_attributes
+
+    try:
+        return dict(raw_attributes)
+    except Exception:
+        logger.warning("Participant attributes could not be normalized. Ignoring attributes.")
+        return {}
+
+
 def build_user_profile_text(participant_context: dict[str, Any]) -> str:
     user_name = participant_context.get("user_name") or participant_context.get("name") or "Unknown"
     age = participant_context.get("age") or "Unknown"
