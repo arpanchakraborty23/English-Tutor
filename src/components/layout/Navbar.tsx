@@ -6,7 +6,7 @@ import { useState } from "react";
 
 const navLinks = [
   { label: "Features", href: "#features" },
-  { label: "Languages", href: "#languages" },
+  { label: "Voice Agent", href: "/voice-agent", isRoute: true },
   { label: "Settings", href: "/settings", isRoute: true },
 ];
 
@@ -35,7 +35,12 @@ export function Navbar() {
             )
           )}
           <ThemeToggle />
-          <Button variant="hero" size="sm">Get Started</Button>
+          <Link to="/login">
+            <Button variant="outline" size="sm">Sign In</Button>
+          </Link>
+          <Link to="/register">
+            <Button variant="accent" size="sm">Get Started</Button>
+          </Link>
         </div>
 
         {/* Mobile */}
