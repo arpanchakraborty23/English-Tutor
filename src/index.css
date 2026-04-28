@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=DM+Sans:wght@400;500&family=DM+Mono:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:wght@400&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --font-display: 'Sora', sans-serif;
+    --font-display: 'DM Sans', sans-serif;
     --font-body: 'DM Sans', sans-serif;
     --font-mono: 'DM Mono', monospace;
 
@@ -25,44 +25,69 @@
     --radius-xl: 1.5rem;
     --radius-full: 9999px;
 
-    /* Landing Page Design System */
-    --bg: #0A0E1A;
-    --surface: #111827;
-    --surface-2: #1E2A3B;
-    --accent: #00D4AA;
-    --accent-glow: rgba(0, 212, 170, 0.1);
-    --text: #F8FAFC;
-    --text-2: #94A3B8;
-    --text-3: #475569;
-    --border: rgba(255, 255, 255, 0.07);
+    /* Light Theme - AI Tutor Dashboard */
+    /* Core */
+    --bg: #F8FAFB;
+    --surface: #FFFFFF;
+    --surface-2: #F3F4F6;
+    --border-color: #E5E9EE;
+    
+    /* Brand / Accent */
+    --accent: #10B981;
+    --accent-light: #D1FAE5;
+    --accent-glow: rgba(16, 185, 129, 0.1);
+    
+    /* Text */
+    --text: #0F1923;
+    --text-2: #374151;
+    --text-3: #9CA3AF;
+    --text-muted: #9CA3AF;
+    
+    /* Status */
     --success: #10B981;
     --warning: #F59E0B;
+    --destructive: #EF4444;
 
-    /* Dark mode defaults */
-    --background: 0 0% 6%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 162 71% 51%;
-    --primary-foreground: 0 0% 6%;
-    --secondary: 0 0% 14%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 29%;
-    --muted-foreground: 0 0% 64%;
-    --accent-primary: 162 71% 51%;
-    --accent-foreground: 0 0% 6%;
+    /* Light Theme Variables for shadcn */
+    --background: 210 25% 98%;
+    --foreground: 220 25% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 10%;
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 220 25% 10%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 220 10% 45%;
+    --accent-primary: 160 84% 39%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border-color: 0 0% 20%;
-    --input: 0 0% 14%;
-    --ring: 162 71% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --input: 210 20% 90%;
+    --ring: 160 84% 39%;
     --radius: 0.75rem;
+    
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 25% 10%;
+    --sidebar-primary: 160 84% 39%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 160 84% 94%;
+    --sidebar-accent-foreground: 160 84% 25%;
+    --sidebar-border: 210 20% 90%;
+    --sidebar-ring: 160 84% 39%;
+    
+    /* Chart Colors */
+    --chart-1: #10B981;
+    --chart-2: #F59E0B;
+    --chart-3: #6366F1;
+    --chart-4: #A78BFA;
   }
 
-  /* Landing page dark mode (primary) */
-  .dark, body {
+  /* Dark mode - for landing page only */
+  .dark {
     --background: 0 0% 6%;
     --foreground: 0 0% 98%;
     --card: 0 0% 10%;
@@ -92,6 +117,14 @@
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 0 0% 20%;
     --sidebar-ring: 162 71% 51%;
+    
+    --bg: #0A0E1A;
+    --surface: #111827;
+    --surface-2: #1E2A3B;
+    --text: #F8FAFC;
+    --text-2: #94A3B8;
+    --text-3: #475569;
+    --border: rgba(255, 255, 255, 0.07);
   }
 }
 

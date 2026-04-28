@@ -1,19 +1,20 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  CreditCard,
-  MessageSquare,
-  Cpu,
-  Brain,
-  Activity,
-  LogOut,
+import {
+  Video,
+  Clock,
+  BookOpen,
+  MessageCircle,
+  Code,
   TrendingUp,
-  Settings,
-  AlertTriangle,
-  DollarSign
+  Brain,
+  Target,
+  Award,
+  Zap,
+  Flame,
+  Star,
+  BarChart3,
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import {
   BarChart,
   Bar,
@@ -24,320 +25,383 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  LineChart,
+  Line,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
 } from "recharts";
+import {
+  KPICard,
+  ChartCard,
+  TimeRangeSelector,
+  DashboardSidebar,
+  DashboardHeader,
+} from "@/components/dashboard";
+import { StreakWidget } from "@/components/dashboard/StreakWidget";
 
-const activityData = [
-  { time: "00:00", interviews: 12 },
-  { time: "02:00", interviews: 8 },
-  { time: "04:00", interviews: 5 },
-  { time: "06:00", interviews: 15 },
-  { time: "08:00", interviews: 45 },
-  { time: "10:00", interviews: 62 },
-  { time: "12:00", interviews: 48 },
-  { time: "14:00", interviews: 55 },
-  { time: "16:00", interviews: 42 },
-  { time: "18:00", interviews: 28 },
-  { time: "20:00", interviews: 18 },
-  { time: "22:00", interviews: 10 },
+// Weekly learning activity data
+const weeklyActivityData = [
+  { day: "Mon", hours: 1.5, sessions: 2 },
+  { day: "Tue", hours: 2.0, sessions: 3 },
+  { day: "Wed", hours: 1.0, sessions: 1 },
+  { day: "Thu", hours: 2.5, sessions: 4 },
+  { day: "Fri", hours: 1.8, sessions: 2 },
+  { day: "Sat", hours: 3.0, sessions: 3 },
+  { day: "Sun", hours: 2.2, sessions: 2 },
 ];
 
-const modelUsageData = [
-  { name: "GPT-4o", value: 68, color: "#10b981" }, // Emerald 500
-  { name: "GPT-4o-mini", value: 24, color: "#f59e0b" }, // Amber 500
-  { name: "Claude 3.5", value: 8, color: "#3b82f6" }, // Blue 500
+// Subject distribution data
+const subjectDistributionData = [
+  { name: "Programming", value: 35, color: "#10B981" },
+  { name: "Languages", value: 25, color: "#F59E0B" },
+  { name: "Mathematics", value: 20, color: "#6366F1" },
+  { name: "Sciences", value: 15, color: "#A78BFA" },
+  { name: "Other", value: 5, color: "#3B82F6" },
 ];
 
-const menuGroups = [
-  {
-    title: "OVERVIEW",
-    items: [
-      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard }
-    ]
+// Skill progress trend
+const progressTrendData = [
+  { week: "W1", score: 45 },
+  { week: "W2", score: 52 },
+  { week: "W3", score: 58 },
+  { week: "W4", score: 65 },
+  { week: "W5", score: 72 },
+  { week: "W6", score: 78 },
+];
+
+// Learning goals progress
+const learningGoalsData = [
+  { goal: "Complete Python Basics", progress: 85, target: 100 },
+  { goal: "Master Spanish Verbs", progress: 60, target: 100 },
+  { goal: "Finish Math Course", progress: 40, target: 100 },
+];
+
+// Recent sessions
+const recentSessionsData = [
+  { 
+    id: 1,
+    subject: "Python Programming", 
+    topic: "List Comprehension", 
+    duration: "32 min", 
+    date: "Today, 10:30 AM",
+    score: 92,
+    type: "coding"
   },
-  {
-    title: "AI OBSERVABILITY",
-    items: [
-      { id: "intelligence", label: "AI Intelligence", icon: Brain },
-      { id: "limits", label: "AI Usage & Limits", icon: Cpu }
-    ]
+  { 
+    id: 2,
+    subject: "Spanish", 
+    topic: "Past Tense Conjugation", 
+    duration: "28 min", 
+    date: "Today, 9:00 AM",
+    score: 88,
+    type: "language"
   },
-  {
-    title: "OPERATIONS",
-    items: [
-      { id: "interviews", label: "Interviews", icon: MessageSquare },
-      { id: "payments", label: "Payments", icon: CreditCard }
-    ]
+  { 
+    id: 3,
+    subject: "Mathematics", 
+    topic: "Quadratic Equations", 
+    duration: "45 min", 
+    date: "Yesterday",
+    score: 85,
+    type: "math"
   },
-  {
-    title: "INFRASTRUCTURE",
-    items: [
-      { id: "health", label: "System Health", icon: Activity }
-    ]
+  { 
+    id: 4,
+    subject: "Physics", 
+    topic: "Newton's Laws", 
+    duration: "38 min", 
+    date: "2 days ago",
+    score: 90,
+    type: "science"
+  },
+];
+
+// Skill radar data for current subject
+const skillRadarData = [
+  { skill: "Understanding", value: 85 },
+  { skill: "Application", value: 78 },
+  { skill: "Problem Solving", value: 72 },
+  { skill: "Communication", value: 88 },
+  { skill: "Creativity", value: 65 },
+];
+
+// Light theme tooltip for charts
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white border border-[#E5E9EE] rounded-xl p-3 shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
+        <p className="text-[#374151] font-medium text-sm">{label}</p>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} className="text-sm" style={{ color: entry.color }}>
+            {entry.name}: {entry.value}
+          </p>
+        ))}
+      </div>
+    );
   }
-];
+  return null;
+};
 
 const Dashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d" | "all">("7d");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
-    <div className="h-screen bg-background text-foreground overflow-hidden flex">
-      {/* Background Blobs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden block">
-        <div className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full bg-emerald-500/10 blur-3xl opacity-50" />
-        <div className="absolute bottom-1/3 -right-32 w-[600px] h-[600px] rounded-full bg-emerald-400/10 blur-3xl opacity-50" />
-      </div>
-
+    <div className="min-h-screen bg-[#F6F5F0]">
       {/* Sidebar */}
-      <aside className="relative z-20 w-64 flex flex-col border-r border-white/10 bg-black/40 backdrop-blur-xl shrink-0">
-        <div className="flex h-20 items-center px-6 mt-2 mb-4">
-          <Link to="/" className="flex items-center gap-3 font-display font-bold">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center shrink-0">
-              <Activity className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-white text-lg leading-tight">AI Interview</span>
-              <span className="text-white/40 text-xs font-medium">Admin Console</span>
-            </div>
-          </Link>
-        </div>
+      <DashboardSidebar 
+        isCollapsed={isSidebarCollapsed} 
+        onCollapsedChange={setIsSidebarCollapsed} 
+      />
 
-        <nav className="flex-1 overflow-y-auto px-4 pb-4 space-y-6 custom-scrollbar">
-          {menuGroups.map((group, idx) => (
-            <div key={idx}>
-              <h4 className="px-3 mb-3 text-xs font-bold text-white/30 tracking-wider uppercase">
-                {group.title}
-              </h4>
-              <div className="space-y-1">
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeTab === item.id;
-                  
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group font-medium text-sm ${
-                        isActive 
-                          ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.05)]" 
-                          : "text-white/60 hover:bg-white/5 hover:text-white border border-transparent"
-                      }`}
-                    >
-                      <Icon className={`w-4 h-4 ${isActive ? "text-emerald-400" : "text-white/50 group-hover:text-emerald-400 transition-colors"}`} />
-                      <span>{item.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </nav>
-      </aside>
+      {/* Main Content */}
+      <div className={cn(
+        "transition-all duration-300",
+        isSidebarCollapsed ? "ml-[68px]" : "ml-[240px]"
+      )}>
+        {/* Header */}
+        <DashboardHeader
+          userName="Alex Johnson"
+          userEmail="alex@example.com"
+          notificationCount={3}
+        />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-y-auto relative z-10 w-full custom-scrollbar">
-        <main className="flex-1 container max-w-7xl mx-auto px-6 py-10 pb-20">
-          
-          {activeTab === "dashboard" && (
-            <div className="space-y-8 animate-in fade-in duration-500">
-              
-              {/* Top Title */}
+        {/* Page Content */}
+        <main className="p-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Page Header */}
+            <div className="flex items-center justify-between mb-8">
               <div>
-                <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-white flex items-center gap-2">
-                  Dashboard
+                <h1 className="text-2xl font-bold text-[#374151]">
+                  Welcome back, Alex!
                 </h1>
-                <p className="text-white/50 mt-2 text-sm md:text-base">
-                  Real-time AI platform health and business metrics
+                <p className="text-[#9CA3AF] mt-1">
+                  Continue your learning journey
                 </p>
               </div>
-
-              {/* KPI Cards Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {/* Card 1 */}
-                <Card className="p-5 border border-white/10 bg-white/[0.02] rounded-2xl hover:border-emerald-500/30 transition-colors">
-                  <div className="flex justify-between items-start mb-4">
-                    <p className="text-sm text-white/50">Interviews Today</p>
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                      <MessageSquare className="w-4 h-4 text-emerald-400" />
-                    </div>
-                  </div>
-                  <h3 className="font-display text-3xl font-bold text-white mb-2">342</h3>
-                  <div className="flex items-center text-xs">
-                    <span className="text-emerald-400 font-medium bg-emerald-500/10 px-1.5 py-0.5 rounded">↗ +8.5%</span>
-                    <span className="text-white/40 ml-2">(vs yesterday)</span>
-                  </div>
-                </Card>
-
-                {/* Card 2 */}
-                <Card className="p-5 border border-white/10 bg-white/[0.02] rounded-2xl hover:border-emerald-500/30 transition-colors">
-                  <div className="flex justify-between items-start mb-4">
-                    <p className="text-sm text-white/50">Revenue Today</p>
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                      <DollarSign className="w-4 h-4 text-emerald-400" />
-                    </div>
-                  </div>
-                  <h3 className="font-display text-3xl font-bold text-white mb-2">$4,847</h3>
-                  <div className="flex items-center text-xs">
-                    <span className="text-emerald-400 font-medium bg-emerald-500/10 px-1.5 py-0.5 rounded">↗ +12.5%</span>
-                    <span className="text-white/40 ml-2">(vs yesterday)</span>
-                  </div>
-                </Card>
-
-                {/* Card 3 */}
-                <Card className="p-5 border border-white/10 bg-white/[0.02] rounded-2xl hover:border-emerald-500/30 transition-colors">
-                  <div className="flex justify-between items-start mb-4">
-                    <p className="text-sm text-white/50">AI Cost Today</p>
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                      <Cpu className="w-4 h-4 text-emerald-400" />
-                    </div>
-                  </div>
-                  <h3 className="font-display text-3xl font-bold text-white mb-2">$127</h3>
-                  <div className="flex items-center text-xs">
-                    <span className="text-red-400 font-medium bg-red-500/10 px-1.5 py-0.5 rounded">↘ -4.2%</span>
-                    <span className="text-white/40 ml-2">(vs yesterday)</span>
-                  </div>
-                </Card>
-
-                {/* Card 4 */}
-                <Card className="p-5 border border-white/10 bg-white/[0.02] rounded-2xl hover:border-emerald-500/30 transition-colors">
-                  <div className="flex justify-between items-start mb-4">
-                    <p className="text-sm text-white/50">Profit Today</p>
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                      <TrendingUp className="w-4 h-4 text-emerald-400" />
-                    </div>
-                  </div>
-                  <h3 className="font-display text-3xl font-bold text-white mb-2">$4,720</h3>
-                  <div className="flex items-center text-xs">
-                    <span className="text-emerald-400 font-medium bg-emerald-500/10 px-1.5 py-0.5 rounded">↗ +14.8%</span>
-                    <span className="text-white/40 ml-2">(vs yesterday)</span>
-                  </div>
-                </Card>
-
-                {/* Card 5 */}
-                <Card className="p-5 border border-white/10 bg-white/[0.02] rounded-2xl hover:border-emerald-500/30 transition-colors">
-                  <div className="flex justify-between items-start mb-4">
-                    <p className="text-sm text-white/50 leading-tight">Avg Cost/<br/>Interview</p>
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                      <Activity className="w-4 h-4 text-emerald-400" />
-                    </div>
-                  </div>
-                  <h3 className="font-display text-3xl font-bold text-white mb-2">$0.37</h3>
-                  <div className="flex items-center text-xs">
-                    <span className="text-red-400 font-medium bg-red-500/10 px-1.5 py-0.5 rounded">↘ -8.2%</span>
-                    <span className="text-white/40 ml-2">(vs yesterday)</span>
-                  </div>
-                </Card>
-
-                {/* Card 6 */}
-                <Card className="p-5 border border-white/10 bg-white/[0.02] rounded-2xl hover:border-emerald-500/30 transition-colors">
-                  <div className="flex justify-between items-start mb-4">
-                    <p className="text-sm text-white/50">Failure Rate</p>
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                      <AlertTriangle className="w-4 h-4 text-emerald-400" />
-                    </div>
-                  </div>
-                  <h3 className="font-display text-3xl font-bold text-white mb-2">0.8%</h3>
-                  <div className="flex items-center text-xs">
-                    <span className="text-red-400 font-medium bg-red-500/10 px-1.5 py-0.5 rounded">↘ -15.3%</span>
-                    <span className="text-white/40 ml-2">(vs yesterday)</span>
-                  </div>
-                </Card>
-              </div>
-
-              {/* Charts Section */}
-              <div className="grid lg:grid-cols-3 gap-6">
-                
-                {/* Bar Chart - 2/3 width */}
-                <Card className="p-6 lg:col-span-2 border border-white/10 bg-white/[0.02] rounded-2xl flex flex-col">
-                  <h3 className="font-bold text-white mb-6 font-display">Today's Activity</h3>
-                  <div className="flex-1 w-full h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={activityData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                        <XAxis 
-                          dataKey="time" 
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }}
-                          dy={10}
-                        />
-                        <YAxis 
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }}
-                        />
-                        <Tooltip 
-                          cursor={{ fill: 'rgba(255,255,255,0.05)' }} 
-                          contentStyle={{ backgroundColor: '#111827', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
-                        />
-                        <Bar 
-                          dataKey="interviews" 
-                          fill="#10b981" 
-                          radius={[4, 4, 0, 0]} 
-                          barSize={32}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="mt-6 pt-4 border-t border-white/5 flex gap-4 text-sm text-white/50">
-                    <p>Peak: <span className="text-white">10:00 AM</span> (62 interviews)</p>
-                    <p className="px-3 border-l border-white/10">Avg: <span className="text-white">29</span> interviews/hour</p>
-                  </div>
-                </Card>
-
-                {/* Donut Chart - 1/3 width */}
-                <Card className="p-6 lg:col-span-1 border border-white/10 bg-white/[0.02] rounded-2xl flex flex-col">
-                  <h3 className="font-bold text-white mb-6 font-display">Model Usage</h3>
-                  <div className="flex-1 relative flex items-center justify-center h-[200px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={modelUsageData}
-                          innerRadius={60}
-                          outerRadius={90}
-                          paddingAngle={2}
-                          dataKey="value"
-                          stroke="none"
-                        >
-                          {modelUsageData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: '#111827', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
-                          itemStyle={{ color: '#fff' }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="mt-6 space-y-3">
-                    {modelUsageData.map((model, idx) => (
-                      <div key={idx} className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: model.color }} />
-                          <span className="text-white/70">{model.name}</span>
-                        </div>
-                        <span className="font-medium text-white">{model.value}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              </div>
+              <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
             </div>
-          )}
 
-          {activeTab !== "dashboard" && (
-            <div className="flex items-center justify-center h-full min-h-[400px]">
-              <div className="text-center">
-                <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
-                  <Cpu className="w-8 h-8 text-emerald-400" />
+            {/* Primary KPI Cards Row */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+              <KPICard
+                title="Sessions"
+                value={12}
+                change="+3"
+                changeType="positive"
+                icon={Video}
+                description="this week"
+              />
+              <KPICard
+                title="Learning Hours"
+                value="4h 30m"
+                change="+45m"
+                changeType="positive"
+                icon={Clock}
+                description="this week"
+              />
+              <KPICard
+                title="Day Streak"
+                value={7}
+                change="best: 12"
+                changeType="neutral"
+                icon={Flame}
+              />
+              <KPICard
+                title="Lessons Done"
+                value="24/40"
+                change="60%"
+                changeType="positive"
+                icon={BookOpen}
+              />
+              <KPICard
+                title="Avg Score"
+                value="85%"
+                change="Top 15%"
+                changeType="positive"
+                icon={Target}
+              />
+              <KPICard
+                title="XP Points"
+                value="1,250"
+                change="Level 5"
+                changeType="positive"
+                icon={Star}
+              />
+            </div>
+
+            {/* Second Row - AI Insights & Progress Trend */}
+            <div className="grid lg:grid-cols-2 gap-5 mb-8">
+              {/* AI Insights */}
+              <ChartCard
+                title="AI Learning Insights"
+                subtitle="Personalized recommendations"
+              >
+                <div className="space-y-3">
+                  <div className="p-4 rounded-xl bg-[#F0FDF4] border border-[#10B981]/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Award className="w-4 h-4 text-[#10B981]" />
+                      <h4 className="text-[#065F46] font-semibold text-sm">Strengths Identified</h4>
+                    </div>
+                    <p className="text-sm text-[#374151] leading-relaxed">
+                      Excellent problem-solving skills in Python! Your code efficiency has improved by 25% this week.
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-[#FFFBEB] border border-[#F59E0B]/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Target className="w-4 h-4 text-[#F59E0B]" />
+                      <h4 className="text-[#92400E] font-semibold text-sm">Focus Areas</h4>
+                    </div>
+                    <p className="text-sm text-[#374151] leading-relaxed">
+                      Spanish verb conjugations need practice. Try scheduling 10 minutes of daily conjugation drills.
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-[#EFF6FF] border border-[#3B82F6]/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Brain className="w-4 h-4 text-[#3B82F6]" />
+                      <h4 className="text-[#1E40AF] font-semibold text-sm">AI Recommendation</h4>
+                    </div>
+                    <p className="text-sm text-[#374151] leading-relaxed">
+                      Based on your learning patterns, morning sessions show 18% better retention. Consider scheduling before 10 AM.
+                    </p>
+                  </div>
                 </div>
-                <h2 className="font-display text-2xl font-bold text-white mb-2">Module Active</h2>
-                <p className="text-white/50">The {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} view is ready to be populated.</p>
-              </div>
-            </div>
-          )}
+              </ChartCard>
 
+              {/* Progress Trend */}
+              <ChartCard title="Learning Progress Trend">
+                <div className="w-full h-[240px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={progressTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
+                      <XAxis
+                        dataKey="week"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                        dy={10}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        domain={[0, 100]}
+                        tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Line
+                        type="monotone"
+                        dataKey="score"
+                        stroke="#10B981"
+                        strokeWidth={3}
+                        dot={{ fill: "#10B981", strokeWidth: 2, r: 4, stroke: "#fff" }}
+                        activeDot={{ r: 6, fill: "#10B981", stroke: "#fff", strokeWidth: 2 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-4 flex items-center gap-2 text-sm">
+                  <TrendingUp className="w-4 h-4 text-[#10B981]" />
+                  <span className="text-[#374151]">
+                    <strong className="text-[#374151]">+33%</strong> improvement from week 1
+                  </span>
+                </div>
+              </ChartCard>
+            </div>
+
+            {/* Learning Goals & Recent Sessions */}
+            <div className="grid lg:grid-cols-2 gap-5 mb-8">
+              {/* Learning Goals */}
+              <ChartCard title="Learning Goals" subtitle="Your progress">
+                <div className="space-y-4">
+                  {learningGoalsData.map((goal, index) => (
+                    <div key={index} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-[#374151]">{goal.goal}</span>
+                        <span className="text-sm font-medium text-[#374151]">{goal.progress}%</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-[#F3F4F6] overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#10B981] to-[#34D399] transition-all duration-500"
+                          style={{ width: `${goal.progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button className="mt-4 w-full py-2.5 rounded-lg border border-[#E5E9EE] text-sm text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#374151] transition-colors">
+                  + Add New Goal
+                </button>
+              </ChartCard>
+
+              {/* Recent Sessions */}
+              <ChartCard title="Recent Sessions">
+                <div className="space-y-3">
+                  {recentSessionsData.map((session) => (
+                    <div
+                      key={session.id}
+                      className="p-3 rounded-xl border border-[#E5E9EE] bg-white hover:border-[#10B981]/30 hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium text-[#374151] truncate">{session.subject}</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F3F4F6] text-[#6B7280] capitalize">
+                              {session.type}
+                            </span>
+                          </div>
+                          <p className="text-xs text-[#9CA3AF]">{session.topic}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-sm font-semibold text-[#10B981]">{session.score}%</span>
+                          <p className="text-[10px] text-[#9CA3AF]">{session.duration}</p>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-[#9CA3AF] mt-2">{session.date}</p>
+                    </div>
+                  ))}
+                </div>
+                <button 
+                  onClick={() => window.location.href = "/tutor"}
+                  className="mt-4 w-full py-2.5 rounded-lg bg-[#10B981] text-white text-sm font-medium hover:bg-[#059669] transition-colors flex items-center justify-center gap-2"
+                >
+                  <Video className="w-4 h-4" />
+                  Start New Session
+                </button>
+              </ChartCard>
+            </div>
+
+            {/* Skill Radar */}
+            <ChartCard title="Current Skill Profile" subtitle="Based on your recent sessions">
+              <div className="w-full h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart data={skillRadarData}>
+                    <PolarGrid stroke="#E5E9EE" />
+                    <PolarAngleAxis 
+                      dataKey="skill" 
+                      tick={{ fill: "#6B7280", fontSize: 12 }}
+                    />
+                    <PolarRadiusAxis 
+                      angle={30} 
+                      domain={[0, 100]} 
+                      tick={{ fill: "#9CA3AF", fontSize: 10 }}
+                    />
+                    <Radar
+                      name="Skills"
+                      dataKey="value"
+                      stroke="#10B981"
+                      fill="#10B981"
+                      fillOpacity={0.2}
+                      strokeWidth={2}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </ChartCard>
+          </div>
         </main>
       </div>
     </div>
