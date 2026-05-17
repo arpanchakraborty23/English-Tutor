@@ -1,154 +1,207 @@
-import { ArrowRight, BarChart3, Bot, Brain, CalendarCheck2, CheckCircle2, MessageCircleQuestion, Mic, PenTool, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Bell,
+  Bot,
+  BookOpen,
+  Brain,
+  ChevronDown,
+  Gauge,
+  GraduationCap,
+  Home,
+  Mic,
+  Radio,
+  Search,
+  Settings,
+  Signal,
+  Users,
+  Video,
+} from "lucide-react";
+import { Area, AreaChart, ResponsiveContainer } from "recharts";
 
-const featureBento = [
-  { title: "AI Voice Tutor", body: "Human-like tone, pacing, and emphasis to replicate a live teacher.", icon: Mic, className: "md:col-span-2" },
-  { title: "Whiteboard Teaching", body: "Step-by-step explanation layers for formulas, graphs, and reasoning.", icon: PenTool, className: "md:col-span-1" },
-  { title: "Adaptive Learning", body: "Teaching style shifts by confidence, speed, and knowledge gaps.", icon: Brain, className: "md:col-span-1" },
-  { title: "Real-Time Doubts", body: "Ask naturally and get instant visual + verbal explanation loops.", icon: MessageCircleQuestion, className: "md:col-span-2" },
-  { title: "Study Planner", body: "Daily targets mapped to your syllabus and exam timeline.", icon: CalendarCheck2, className: "md:col-span-1" },
-  { title: "Parent Dashboard", body: "Progress, focus, attendance, and weak-topic alerts in one view.", icon: BarChart3, className: "md:col-span-1" },
+const stats = [
+  { label: "Active Students", value: "1,284", trend: "+8.2%", spark: [28, 30, 29, 36, 41, 40, 45] },
+  { label: "Live Sessions Now", value: "2", trend: "2 students in session", spark: [8, 9, 7, 10, 12, 10, 11], live: true },
+  { label: "Courses Published", value: "18", trend: "+3 this month", spark: [14, 14, 15, 16, 16, 17, 18] },
+  { label: "Avg. Session Duration", value: "34m 22s", trend: "+4m vs last week", spark: [20, 21, 23, 26, 25, 28, 30] },
 ];
 
-const storySteps = ["Student asks question", "AI explains visually", "Whiteboard demonstrates", "AI adapts depth instantly", "Progress updates live"];
-const scenarios = ["Math concept mastery", "Science visualization", "Language speaking lab", "Exam revision sprint"];
-const roadmap = ["Assessment", "Daily learning", "Revision cycles", "Weak topic detection", "Exam preparation"];
-const parentMetrics = ["Progress Analytics", "Weekly Reports", "Attendance", "Focus Score", "Weak Topic Alerts"];
-const testimonials = [
-  "“My child now asks for study time. The AI feels like a real mentor.” — Parent",
-  "“I improved from confusion to confidence in algebra within 3 weeks.” — Student",
-  "+92% syllabus completion among consistent learners",
-  "+38% average focus score improvement",
+const tutors = [
+  { name: "Aria — Physics Tutor", status: "LIVE", course: "Physics 301", sessions: 842, ring: true },
+  { name: "Niko — Math Tutor", status: "Idle", course: "Math 101", sessions: 610 },
+  { name: "Luma — Biology Tutor", status: "Offline", course: "Biology 210", sessions: 497 },
 ];
 
-const GlassCard = ({ className, style, children }: { className?: string; style?: React.CSSProperties; children: React.ReactNode }) => (
-  <div style={style} className={`rounded-2xl border border-white/50 bg-white/65 backdrop-blur-xl shadow-[0_10px_40px_rgba(124,124,255,.12)] ${className ?? ""}`}>{children}</div>
-);
+const liveSessionsSeed = [
+  { student: "Riya Sen", chapter: "Physics · Chapter 3", tutor: "Aria", quality: "Excellent", seconds: 782 },
+  { student: "Karan Mehta", chapter: "Math · Integrals", tutor: "Niko", quality: "Good", seconds: 431 },
+];
+
+const activity = [
+  { text: "Riya joined Physics - Chapter 3", time: "2 min ago", tone: "cyan" },
+  { text: "AI Tutor 'Aria' answered 12 questions", time: "session ended", tone: "amber" },
+  { text: "New student enrolled in Math 101", time: "11 min ago", tone: "cyan" },
+  { text: "Luma knowledge base updated (2 PDFs)", time: "19 min ago", tone: "amber" },
+  { text: "LiveKit room lk-physics-3 connected", time: "just now", tone: "cyan" },
+];
+
+const courses = [
+  { name: "Physics 301", progress: 72, chapters: [1, 1, 1, 1, 0.6, 0.3, 0.2] },
+  { name: "Math 101", progress: 58, chapters: [1, 1, 1, 0.5, 0.4, 0.2, 0.1] },
+  { name: "Biology 210", progress: 44, chapters: [1, 0.8, 0.6, 0.3, 0.2, 0.1, 0] },
+];
+
+const nav = [
+  [Home, "Overview"],
+  [Bot, "My AI Tutors"],
+  [BookOpen, "Courses"],
+  [GraduationCap, "Students"],
+  [Radio, "Live Sessions"],
+  [Gauge, "Analytics"],
+  [Mic, "Voice & Persona Settings"],
+  [Settings, "Settings"],
+] as const;
+
+const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
+
+const fmt = (s: number) => `${Math.floor(s / 60)}m ${`${s % 60}`.padStart(2, "0")}s`;
 
 export const NuralyticsStyleLanding = () => {
+  const [openSidebar, setOpenSidebar] = useState(false);
+  const [liveSessions, setLiveSessions] = useState(liveSessionsSeed);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setLiveSessions((curr) => curr.map((it) => ({ ...it, seconds: it.seconds + 1 })));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const sparkData = useMemo(() => stats.map((s) => s.spark.map((v, i) => ({ i, v }))), []);
+
   return (
-    <main className="bg-[#F8FAFC] text-[#0F172A] overflow-x-hidden">
-      <section className="relative min-h-screen px-6 pt-24 pb-16">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,#4DB6FF30,transparent_35%),radial-gradient(circle_at_85%_15%,#D946EF24,transparent_30%),radial-gradient(circle_at_50%_100%,#7C7CFF30,transparent_45%)]" />
-        <div className="relative mx-auto max-w-7xl grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <p className="inline-flex items-center gap-2 text-xs tracking-[0.2em] uppercase text-[#64748B]"><Sparkles className="size-3.5 text-[#7C7CFF]" /> Human-centered AI tutor</p>
-            <h1 className="mt-6 text-5xl md:text-7xl leading-tight font-semibold">Education becomes personal, adaptive, and deeply human again.</h1>
-            <p className="mt-6 max-w-xl text-[#64748B] text-lg">An emotionally intelligent AI Tutor that teaches by voice, explains on interactive whiteboards, and adapts in real-time to each student.</p>
-            <div className="mt-10 flex flex-wrap gap-4">
-              <Link to="/register" className="rounded-2xl px-6 py-3 text-white bg-gradient-to-r from-[#4DB6FF] via-[#7C7CFF] to-[#D946EF] shadow-[0_8px_28px_rgba(124,124,255,.35)] hover:-translate-y-0.5 transition inline-flex items-center gap-2">Start Free Trial <ArrowRight className="size-4" /></Link>
-              <button className="rounded-2xl px-6 py-3 bg-white/80 border border-white text-[#0F172A] hover:bg-white transition">Meet Your AI Tutor</button>
-            </div>
-          </div>
-          <GlassCard className="p-6">
-            <div className="flex items-center justify-between text-sm text-[#64748B]"><span>Live AI Teaching Session</span><Bot className="size-4 text-[#7C7CFF]" /></div>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="rounded-xl p-4 bg-gradient-to-br from-[#4DB6FF14] to-[#7C7CFF14]">Voice explanation in progress...</div>
-              <div className="rounded-xl p-4 bg-gradient-to-br from-[#D946EF14] to-[#7C7CFF14]">Floating syllabus roadmap</div>
-            </div>
-            <div className="mt-4 h-16 flex items-end gap-1">{Array.from({ length: 24 }).map((_, i) => <span key={i} className="w-1 rounded-full bg-[#7C7CFF] animate-pulse" style={{ height: `${10 + ((i * 7) % 35)}px`, animationDelay: `${i * 0.03}s` }} />)}</div>
-          </GlassCard>
-        </div>
-      </section>
+    <main
+      style={{
+        ["--color-bg" as string]: "#0A0F1E",
+        ["--color-surface" as string]: "#111A31",
+        ["--color-accent-cyan" as string]: "#00E5FF",
+        ["--color-accent-amber" as string]: "#FFB830",
+        ["--color-text" as string]: "#E8EDF5",
+      }}
+      className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]"
+    >
+      <div className="fixed inset-0 pointer-events-none opacity-40 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:44px_44px]" />
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_10%_10%,rgba(0,229,255,.18),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(255,184,48,.10),transparent_24%)]" />
 
-      <section className="px-6 py-20">
-        <div className="mx-auto max-w-7xl grid md:grid-cols-4 gap-4 auto-rows-[170px]">
-          {featureBento.map((item) => (
-            <GlassCard key={item.title} className={`${item.className} p-6 hover:-translate-y-1 transition`}>
-              <item.icon className="size-5 text-[#7C7CFF]" />
-              <h3 className="mt-4 text-xl font-semibold">{item.title}</h3>
-              <p className="mt-2 text-sm text-[#64748B]">{item.body}</p>
-            </GlassCard>
-          ))}
-        </div>
-      </section>
-
-      <section className="px-6 py-24 bg-white">
-        <div className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-10">
-          <div className="lg:sticky lg:top-24 h-fit">
-            <h2 className="text-4xl font-semibold">Scroll the learning story.</h2>
-            <p className="mt-4 text-[#64748B]">Each stage transforms UI state from question to understanding.</p>
+      <header className="sticky top-0 z-40 backdrop-blur-xl border-b border-cyan-300/10 bg-[#0A0F1Ecc]">
+        <div className="px-4 md:px-8 h-16 flex items-center gap-4">
+          <button className="md:hidden" onClick={() => setOpenSidebar((s) => !s)}>☰</button>
+          <div className="font-semibold tracking-wide text-cyan-300">YourAppName</div>
+          <div className="flex-1 max-w-xl mx-auto hidden md:flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-white/5 px-3 py-2 text-sm text-slate-300">
+            <Search className="size-4" /> Search courses, students, sessions...
           </div>
-          <div className="space-y-6">
-            {storySteps.map((step, i) => (
-              <GlassCard key={step} className="p-6 hover:shadow-[0_14px_40px_rgba(77,182,255,.16)] transition">
-                <p className="text-xs uppercase tracking-wider text-[#64748B]">Step {i + 1}</p>
-                <h3 className="mt-2 text-2xl">{step}</h3>
-              </GlassCard>
+          <div className="ml-auto flex items-center gap-4 text-sm">
+            <button className="relative p-2 rounded-lg border border-cyan-300/20"><Bell className="size-4" /><span className="absolute -top-1 -right-1 text-[10px] bg-amber-400 text-black px-1 rounded">3</span></button>
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-400/30 bg-emerald-400/10"><span className="size-2 rounded-full bg-emerald-300 animate-pulse" />LiveKit Connected</div>
+            <button className="flex items-center gap-2"><div className="size-8 rounded-full bg-cyan-400/30" /><ChevronDown className="size-4" /></button>
+          </div>
+        </div>
+      </header>
+
+      <div className="relative z-10 flex">
+        <aside className={cn("fixed md:sticky top-16 h-[calc(100vh-64px)] w-72 p-4 border-r border-cyan-300/10 bg-[#0D1428] transition-transform", openSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0")}>
+          <nav className="space-y-2">
+            {nav.map(([Icon, label], i) => (
+              <button key={label} className={cn("w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-sm", i === 0 ? "bg-cyan-400/15 text-cyan-200 border border-cyan-300/30" : "hover:bg-white/5 text-slate-300")}>
+                <Icon className="size-4" /> {label}
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        <section className="flex-1 p-4 md:p-8 md:ml-0 w-full">
+          <div className="grid lg:grid-cols-4 gap-4 animate-in fade-in duration-700">
+            {stats.map((s, idx) => (
+              <div key={s.label} className="rounded-2xl border border-cyan-300/20 bg-[var(--color-surface)] p-4 shadow-[0_0_0_1px_rgba(0,229,255,.05),0_20px_40px_rgba(0,0,0,.35)]" style={{ animationDelay: `${idx * 120}ms` }}>
+                <p className="text-xs text-slate-400">{s.label}</p>
+                <div className="mt-2 flex items-center justify-between">
+                  <div className="text-2xl font-semibold">{s.value}</div>
+                  {s.live && <span className="inline-flex items-center gap-1 text-xs text-rose-300"><span className="size-2 rounded-full bg-rose-400 animate-pulse" />LIVE</span>}
+                </div>
+                <p className="text-xs text-slate-400 mt-1">{s.trend}</p>
+                <div className="h-12 mt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={sparkData[idx]}>
+                      <Area type="monotone" dataKey="v" stroke="#00E5FF" fill="url(#g)" strokeWidth={2} />
+                      <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#00E5FF" stopOpacity={0.35} /><stop offset="100%" stopColor="#00E5FF" stopOpacity={0} /></linearGradient></defs>
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             ))}
           </div>
-        </div>
-      </section>
 
-      <section className="px-6 py-20 overflow-x-auto snap-x snap-mandatory flex gap-5">
-        {scenarios.map((title) => (
-          <GlassCard key={title} className="snap-start shrink-0 w-[84vw] lg:w-[38vw] p-8 bg-gradient-to-br from-white to-[#EEF4FF]">
-            <h3 className="text-3xl font-semibold">{title}</h3>
-            <p className="mt-4 text-[#64748B]">Horizontal panel mode for subject-specific tutoring and interaction patterns.</p>
-          </GlassCard>
-        ))}
-      </section>
-
-      <section className="px-6 py-20 bg-white">
-        <div className="mx-auto max-w-4xl relative">
-          <div className="absolute left-5 top-0 bottom-0 w-px bg-gradient-to-b from-[#4DB6FF] via-[#7C7CFF] to-[#D946EF]" />
-          {roadmap.map((step, i) => (
-            <div key={step} className="relative pl-16 pb-10">
-              <div className="absolute left-0 top-0 size-10 rounded-full bg-white border border-[#7C7CFF66] grid place-items-center text-sm">{i + 1}</div>
-              <h3 className="text-2xl font-medium">{step}</h3>
+          <div className="mt-6 rounded-2xl border border-cyan-300/20 bg-[var(--color-surface)] p-4">
+            <h3 className="text-lg mb-3">My AI Tutors</h3>
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {tutors.map((t) => (
+                <article key={t.name} className={cn("min-w-[280px] rounded-2xl border p-4 bg-[#0f1a33] hover:-translate-y-1 transition", t.ring ? "border-cyan-300 shadow-[0_0_25px_rgba(0,229,255,.35)]" : "border-white/10")}>
+                  <div className="flex items-center gap-3">
+                    <div className={cn("size-12 rounded-full grid place-items-center", t.ring ? "bg-cyan-300/25 ring-2 ring-cyan-300/60" : "bg-white/10")}><Bot className="size-5" /></div>
+                    <div><p className="font-medium">{t.name}</p><p className="text-xs text-slate-400">{t.course}</p></div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between text-sm"><span className={cn("px-2 py-1 rounded-full text-xs", t.status === "LIVE" ? "bg-rose-400/20 text-rose-200" : "bg-white/10 text-slate-300")}>{t.status}</span><span>{t.sessions} sessions</span></div>
+                  <div className="mt-4 flex gap-2"><button className="flex-1 rounded-lg border border-cyan-300/30 px-3 py-2 text-sm">Manage</button><button className="flex-1 rounded-lg bg-cyan-400 text-black px-3 py-2 text-sm font-medium">Launch Session</button></div>
+                </article>
+              ))}
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
 
-      <section className="px-6 py-20">
-        <div className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-6">
-          <GlassCard className="p-6">
-            <h3 className="text-3xl font-semibold">AI Speaking Interface</h3>
-            <div className="mt-5 h-20 flex items-end gap-1">{Array.from({ length: 28 }).map((_, i) => <span key={i} className="w-1 rounded-full bg-[#D946EF] animate-pulse" style={{ height: `${12 + ((i * 11) % 36)}px`, animationDelay: `${i * 0.025}s` }} />)}</div>
-            <p className="mt-4 text-[#64748B]">Live voice waveform, smart notes, and adaptive explanation tone.</p>
-          </GlassCard>
-          <GlassCard className="p-6">
-            <h3 className="text-3xl font-semibold">Interactive Whiteboard</h3>
-            <div className="mt-5 rounded-xl h-48 bg-gradient-to-br from-[#EEF4FF] to-white border border-white grid place-items-center text-[#64748B]">Dynamic formula drawing + concept map overlays</div>
-            <p className="mt-4 text-[#64748B]">Visual-first tutoring with clear, layered reasoning structure.</p>
-          </GlassCard>
-        </div>
-      </section>
+          <div className="mt-6 grid xl:grid-cols-3 gap-4">
+            <div className="xl:col-span-2 rounded-2xl border border-cyan-300/20 bg-[var(--color-surface)] p-4">
+              <div className="flex items-center justify-between"><h3 className="text-lg">Live Sessions</h3><span className="inline-flex items-center gap-2 text-rose-300 text-xs"><span className="size-2 rounded-full bg-rose-400 animate-pulse" />Real-time feed</span></div>
+              <div className="mt-3 space-y-3">
+                {liveSessions.map((s) => (
+                  <div key={s.student} className="rounded-xl border border-white/10 p-3 bg-[#0d1630] flex items-center gap-3">
+                    <div className="size-9 rounded-full bg-cyan-400/20" />
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{s.student}</p>
+                      <p className="text-xs text-slate-400">{s.chapter} • Tutor: {s.tutor}</p>
+                    </div>
+                    <div className="text-xs text-slate-300 font-mono">{fmt(s.seconds)}</div>
+                    <div className="text-xs inline-flex items-center gap-1"><Signal className="size-3 text-emerald-300" />{s.quality}</div>
+                    <button className="rounded-lg px-3 py-2 text-xs border border-cyan-300/30">Monitor</button>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-      <section className="px-6 py-20 bg-white">
-        <div className="mx-auto max-w-7xl relative h-[390px]">
-          {parentMetrics.map((m, i) => (
-            <GlassCard key={m} className="absolute p-5 w-56" style={{ left: `${8 + i * 14}%`, top: `${10 + (i % 2) * 24}%` }} >
-              <h4 className="font-medium">{m}</h4>
-              <p className="mt-2 text-sm text-[#64748B]">Trust-building, transparent family reporting.</p>
-            </GlassCard>
-          ))}
-        </div>
-      </section>
+            <div className="rounded-2xl border border-cyan-300/20 bg-[var(--color-surface)] p-4">
+              <h3 className="text-lg">Recent Activity</h3>
+              <div className="mt-3 space-y-3">
+                {activity.map((a) => (
+                  <div key={a.text} className="pl-3 border-l border-white/15">
+                    <p className="text-sm">{a.text}</p>
+                    <p className={cn("text-xs", a.tone === "amber" ? "text-amber-300" : "text-cyan-300")}>{a.time}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
 
-      <section className="px-6 py-24">
-        <div className="mx-auto max-w-6xl relative h-[400px] grid place-items-center">
-          {testimonials.map((text, i) => (
-            <GlassCard key={text} className="absolute p-4 max-w-xs animate-pulse" style={{ transform: `translate(${(i - 1.5) * 130}px, ${(i % 2) * 100 - 50}px)` }} >
-              <p className="text-sm">{text}</p>
-            </GlassCard>
-          ))}
-        </div>
-      </section>
-
-      <section className="px-6 py-28 text-center bg-[radial-gradient(circle_at_top,#4DB6FF35,transparent_45%),radial-gradient(circle_at_bottom,#D946EF2f,transparent_42%),#F8FAFC]">
-        <h2 className="text-5xl md:text-7xl font-semibold">Education should feel personal again.</h2>
-        <p className="mt-4 max-w-2xl mx-auto text-[#64748B]">Build confidence, curiosity, and consistency with an AI mentor students trust.</p>
-        <div className="mt-10 flex justify-center gap-4 flex-wrap">
-          <Link to="/register" className="rounded-2xl px-6 py-3 text-white bg-gradient-to-r from-[#4DB6FF] via-[#7C7CFF] to-[#D946EF] shadow-[0_8px_28px_rgba(124,124,255,.35)]">Start Free Trial</Link>
-          <button className="rounded-2xl px-6 py-3 bg-white border border-white">Meet Your AI Tutor</button>
-        </div>
-      </section>
-
-      <footer className="px-6 py-10 border-t border-[#E2E8F0] text-[#64748B] text-sm text-center inline-flex w-full items-center justify-center gap-2">
-        <CheckCircle2 className="size-4" /> Designed for emotionally intelligent learning.
-      </footer>
+          <div className="mt-6 rounded-2xl border border-cyan-300/20 bg-[var(--color-surface)] p-4">
+            <h3 className="text-lg">Syllabus Progress Tracker</h3>
+            <div className="mt-4 grid md:grid-cols-3 gap-4">
+              {courses.map((c) => (
+                <div key={c.name} className="rounded-xl border border-white/10 p-3 bg-[#0d1630]">
+                  <div className="flex justify-between text-sm"><span>{c.name}</span><span className="text-cyan-300">{c.progress}%</span></div>
+                  <div className="h-2 mt-2 rounded-full bg-white/10 overflow-hidden"><div className="h-full bg-gradient-to-r from-cyan-400 to-amber-300" style={{ width: `${c.progress}%` }} /></div>
+                  <div className="mt-3 flex gap-1">{c.chapters.map((n, i) => <span key={i} className="h-2 flex-1 rounded-full" style={{ background: `rgba(0,229,255,${0.15 + n * 0.7})` }} />)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
     </main>
   );
 };
